@@ -6,6 +6,12 @@ const int TMP36_DATA_PIN = A0;
 
 const String KILN_EVENT = "kiln";
 
+const int MEASUREMENT_INTERVAL = 60;
+const int FAILURE_INTERVAL = 2000;
+
+const int WAKEUP_DELAY = 2000;
+const int PRE_SLEEP_DELAY = 500;
+
 RHT03 rht03;
 TMP36 tmp36;
 
@@ -14,6 +20,8 @@ void setup() {
 
 	tmp36.begin(TMP36_DATA_PIN);
 	rht03.begin(RHT03_DATA_PIN);
+
+	delay(WAKEUP_DELAY);
 }
 
 void loop() {
@@ -32,13 +40,17 @@ void loop() {
 
 		if(!publishEvent()) {
 			Serial.println("Unable to publish temp event!");
+		} else {
+			// if we were successful, go to sleep for a while to save battery life.
+			// this will reset the entire program so we start up from the beginning
+			delay(PRE_SLEEP_DELAY);
+			//System.sleep(SLEEP_MODE_DEEP, MEASUREMENT_INTERVAL);
 		}
-	} else {
-		// if we fail, wait a little while for things to reset before we try again
-		delay(RHT_READ_INTERVAL_MS);
 	}
 
-	delay(2000);
+	// we'll only get here if something went wrong.  wait a little while before
+	// we try again
+	delay(FAILURE_INTERVAL);
 }
 
 bool publishEvent() {
