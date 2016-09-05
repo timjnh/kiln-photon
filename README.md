@@ -4,12 +4,14 @@ Photon library for managing sensors in my solar kiln
 # Usage
 
 RHT03 Wiring:
+
 1. Pin 1 goes to a digital pin (D0-D6) for input power
 2. Pin 2 goes to a digital input pin (D0-D6)
 3. Pin 3 goes nowhere
 4. Pin 4 goes to GND
 
 TMP36 Wiring:
+
 1. Pin 1 goes to the same digital pin that was selected for RHT03
 2. Pin 2 goes to an analog input pin (A0-A5)
 3. Pin 3 goes to GND
