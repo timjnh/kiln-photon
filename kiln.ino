@@ -1,13 +1,22 @@
 #include "rht03.h"
 #include "tmp36.h"
+#include "thing_speak.h"
+#include "twitter_speak.h"
+#include "private_data.h"
 
 const int RHT03_DATA_PIN = D6; // RHT03 data pin
 const int TMP36_DATA_PIN = A0;
 
-const String KILN_EVENT = "kiln";
+enum ThingSpeakFields {
+	THING_SPEAK_RHT03_HUMIDITY_FIELD = 1,
+	THING_SPEAK_RHT03_TEMPERATURE_FIELD,
+	THING_SPEAK_TMP36_TEMPERATURE_FIELD
+};
+
+const unsigned short THING_SPEAK_SUCCESS = 200;
 
 const int MEASUREMENT_INTERVAL = 60;
-const int FAILURE_INTERVAL = 2000;
+const int FAILURE_INTERVAL = 20000;
 
 const int WAKEUP_DELAY = 2000;
 const int PRE_SLEEP_DELAY = 500;
@@ -15,8 +24,16 @@ const int PRE_SLEEP_DELAY = 500;
 RHT03 rht03;
 TMP36 tmp36;
 
+ThingSpeakClass thingSpeak;
+TCPClient client;
+
+TwitterSpeak twitterSpeak;
+
 void setup() {
 	Serial.begin(9600);
+
+	thingSpeak.begin(client);
+	twitterSpeak.begin(THING_TWEET_API_KEY);
 
 	tmp36.begin(TMP36_DATA_PIN);
 	rht03.begin(RHT03_DATA_PIN);
@@ -54,6 +71,26 @@ void loop() {
 }
 
 bool publishEvent() {
-	String eventData = String(rht03.humidity(), 1) + "," + String(rht03.tempF(), 1) + "," + String(tmp36.tempF(), 1);
-	return Particle.publish(KILN_EVENT, eventData, 60, PRIVATE);
+	int thingSpeakResult;
+	bool twitterSpeakResult;
+
+	String tweet = "It's " + String(rht03.tempF(), 1) + "F in the kiln right now and " + String(rht03.humidity(), 1) + "% humidity";
+
+	twitterSpeakResult = twitterSpeak.tweet(tweet);
+	if(!twitterSpeakResult) {
+		Serial.println("Failed writing to Twitter!");
+		return false;
+	}
+
+	thingSpeak.setField(THING_SPEAK_RHT03_HUMIDITY_FIELD, rht03.humidity());
+	thingSpeak.setField(THING_SPEAK_RHT03_TEMPERATURE_FIELD, rht03.tempF());
+	thingSpeak.setField(THING_SPEAK_TMP36_TEMPERATURE_FIELD, tmp36.tempF());
+
+	thingSpeakResult = thingSpeak.writeFields(THING_SPEAK_CHANNEL_ID, THING_SPEAK_API_KEY);
+	if(thingSpeakResult != THING_SPEAK_SUCCESS) {
+		Serial.println("Failed writing to ThingSpeak!");
+		return false;
+	}
+
+	return true;
 }
