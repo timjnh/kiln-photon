@@ -3,11 +3,15 @@
 #include "thing_speak.h"
 #include "twitter_speak.h"
 #include "private_data.h"
+#include "voltage_divider.h"
 
 const int RHT03_DATA_PIN = D6;
 const int TMP36_1_DATA_PIN = A0;
 const int TMP36_2_DATA_PIN = A1;
 const int POWER_PIN = D0;
+const int VD_DATA_PIN = A2;
+const int VD_RESISTANCE = 220;
+const float VD_INPUT_VOLTAGE = 3.15;
 
 enum ThingSpeakFields {
 	THING_SPEAK_RHT03_HUMIDITY_FIELD = 1,
@@ -27,6 +31,7 @@ const int PRE_SLEEP_DELAY = 500;
 RHT03 rht03;
 TMP36 tmp36_1;
 TMP36 tmp36_2;
+VoltageDivider voltageDivider;
 
 ThingSpeakClass thingSpeak;
 TCPClient client;
@@ -42,6 +47,8 @@ void setup() {
 	tmp36_1.begin(TMP36_1_DATA_PIN);
 	tmp36_2.begin(TMP36_2_DATA_PIN);
 	rht03.begin(RHT03_DATA_PIN);
+
+	voltageDivider.begin(VD_DATA_PIN, VD_INPUT_VOLTAGE, VD_RESISTANCE, VD_RESISTANCE);
 }
 
 void loop() {
@@ -51,8 +58,11 @@ void loop() {
 	int tmp36_1_Result = tmp36_1.update();
 	int tmp36_2_Result = tmp36_2.update();
 	int rht03Result = rht03.update();
+	int voltageDividerResult = voltageDivider.update();
 
-	if(tmp36_1_Result && tmp36_2_Result && rht03Result) {
+	Serial.println("3V3 Volts: " + String(voltageDivider.volts(), 2) + " volts");
+
+	if(tmp36_1_Result && tmp36_2_Result && rht03Result && voltageDividerResult) {
 		Serial.println("RHT03 Humidity: " + String(rht03.humidity(), 2) + " %");
 		Serial.println("RHT03 Temp (F): " + String(rht03.tempF(), 2) + " deg F");
 		Serial.println("RHT03 Temp (C): " + String(rht03.tempC(), 2) + " deg C");
@@ -64,6 +74,8 @@ void loop() {
 		Serial.println("TMP36(2) Volts: " + String(tmp36_2.volts(), 2));
 		Serial.println("TMP36(2) Temp (C): " + String(tmp36_2.tempC(), 2) + " deg C");
 		Serial.println("TMP36(2) Temp (F): " + String(tmp36_2.tempF(), 2) + " deg F");
+
+		Serial.println("3V3 Volts: " + String(voltageDivider.volts(), 2) + " volts");
 
 		if(!publishEvent()) {
 			Serial.println("Unable to publish temp event!");
