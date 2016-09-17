@@ -78,6 +78,9 @@ void loop() {
 		/*sleep(MEASUREMENT_INTERVAL);*/
 	} else {
 		Serial.println("Oh noes!  Couldn't read from our sensors!");
+
+		delay(1000);
+		Serial.println(String::format("Wifi strength: %d", WiFi.RSSI()));
 	}
 
 	// we'll only get here if something went wrong.  wait a little while before
@@ -88,6 +91,8 @@ void loop() {
 void wakeUp() {
 	pinMode(POWER_PIN, OUTPUT);
 	digitalWrite(POWER_PIN, HIGH);
+
+	WiFi.selectAntenna(ANT_EXTERNAL);
 
 	delay(WAKEUP_DELAY);
 
