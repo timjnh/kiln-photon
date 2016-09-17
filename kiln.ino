@@ -4,6 +4,7 @@
 #include "twitter_speak.h"
 #include "private_data.h"
 #include "voltage_divider.h"
+#include "quote_service.h"
 
 const int RHT03_DATA_PIN = D6;
 const int TMP36_1_DATA_PIN = A0;
@@ -22,7 +23,7 @@ enum ThingSpeakFields {
 
 const unsigned short THING_SPEAK_SUCCESS = 200;
 
-const int MEASUREMENT_INTERVAL = 60;
+const int MEASUREMENT_INTERVAL = 60 * 15; // 15 minutes
 const int FAILURE_INTERVAL = 20000;
 
 const int WAKEUP_DELAY = 2000;
@@ -37,6 +38,8 @@ ThingSpeakClass thingSpeak;
 TCPClient client;
 
 TwitterSpeak twitterSpeak;
+
+QuoteService quoteService;
 
 void setup() {
 	Serial.begin(9600);
@@ -79,12 +82,12 @@ void loop() {
 
 		if(!publishEvent()) {
 			Serial.println("Unable to publish temp event!");
-		} else {
-			// if we were successful, go to sleep for a while to save battery life.
-			// this will reset the entire program so we start up from the beginning
-			delay(PRE_SLEEP_DELAY);
-			sleep(MEASUREMENT_INTERVAL);
 		}
+
+		// go to sleep for a while to save battery life.  this will reset the
+		// entire program so we start up from the beginning
+		delay(PRE_SLEEP_DELAY);
+		/*sleep(MEASUREMENT_INTERVAL);*/
 	} else {
 		Serial.println("Oh noes!  Couldn't read from our sensors!");
 	}
@@ -99,6 +102,8 @@ void wakeUp() {
 	digitalWrite(POWER_PIN, HIGH);
 
 	delay(WAKEUP_DELAY);
+
+	randomSeed(millis());
 }
 
 void sleep(int seconds) {
@@ -110,14 +115,7 @@ void sleep(int seconds) {
 bool publishEvent() {
 	int thingSpeakResult;
 	bool twitterSpeakResult;
-
-	String tweet = "It's " + String(rht03.tempF(), 1) + "F in the kiln right now and " + String(rht03.humidity(), 1) + "% humidity";
-
-	twitterSpeakResult = twitterSpeak.tweet(tweet);
-	if(!twitterSpeakResult) {
-		Serial.println("Failed writing to Twitter!");
-		return false;
-	}
+	String quote = "";
 
 	thingSpeak.setField(THING_SPEAK_RHT03_HUMIDITY_FIELD, rht03.humidity());
 	thingSpeak.setField(THING_SPEAK_RHT03_TEMPERATURE_FIELD, rht03.tempF());
@@ -127,6 +125,23 @@ bool publishEvent() {
 	thingSpeakResult = thingSpeak.writeFields(THING_SPEAK_CHANNEL_ID, THING_SPEAK_API_KEY);
 	if(thingSpeakResult != THING_SPEAK_SUCCESS) {
 		Serial.println("Failed writing to ThingSpeak!");
+		return false;
+	}
+
+	if(rht03.tempF() < 60) {
+		quote = quoteService.getQuote("cold") + "  ";
+	} else if(rht03.tempF() > 80 && rht03.tempF() < 100) {
+		quote = quoteService.getQuote("warm") + "  ";
+	} else if(rht03.tempF() > 100) {
+		quote = quoteService.getQuote("hot") + "  ";
+	}
+
+	String tweet = quote + "It's " + String(rht03.tempF(), 1) + "F in the kiln right now and " + String(rht03.humidity(), 1) + "% humidity";
+	Serial.println(tweet);
+
+	twitterSpeakResult = twitterSpeak.tweet(tweet);
+	if(!twitterSpeakResult) {
+		Serial.println("Failed writing to Twitter!");
 		return false;
 	}
 
