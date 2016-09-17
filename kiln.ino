@@ -75,7 +75,7 @@ void loop() {
 		// go to sleep for a while to save battery life.  this will reset the
 		// entire program so we start up from the beginning
 		delay(PRE_SLEEP_DELAY);
-		/*sleep(MEASUREMENT_INTERVAL);*/
+		sleep(MEASUREMENT_INTERVAL);
 	} else {
 		Serial.println("Oh noes!  Couldn't read from our sensors!");
 
@@ -101,8 +101,7 @@ void wakeUp() {
 
 void sleep(int seconds) {
 	digitalWrite(POWER_PIN, LOW);
-	digitalWrite(POWER_PIN, LOW);
-	//System.sleep(SLEEP_MODE_DEEP, seconds);
+	System.sleep(SLEEP_MODE_DEEP, seconds);
 }
 
 bool publishEvent() {
