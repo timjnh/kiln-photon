@@ -121,14 +121,14 @@ bool publishEvent() {
 	}
 
 	if(rht03.tempF() < 60) {
-		quote = quoteService.getQuote("cold") + "  ";
+		quote = quoteService.getQuote("cold", 69) + "  ";
 	} else if(rht03.tempF() > 80 && rht03.tempF() < 100) {
-		quote = quoteService.getQuote("warm") + "  ";
+		quote = quoteService.getQuote("warm", 69) + "  ";
 	} else if(rht03.tempF() > 100) {
-		quote = quoteService.getQuote("hot") + "  ";
+		quote = quoteService.getQuote("hot", 69) + "  ";
 	}
 
-	String tweet = quote + "It's " + String(rht03.tempF(), 1) + "F in the kiln right now and " + String(rht03.humidity(), 1) + "% humidity";
+	String tweet = quote + "It's " + String(rht03.tempF(), 1) + "F and " + String(rht03.humidity(), 1) + "% humidity in the kiln.  http://bit.ly/2ceiOWi";
 	Serial.println(tweet);
 
 	twitterSpeakResult = twitterSpeak.tweet(tweet);

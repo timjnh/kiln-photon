@@ -4,7 +4,10 @@ class QuoteService {
 public:
   QuoteService() {}
 
-  String getQuote(String topic) {
+  String getQuote(String topic, int maxLength) {
+    String quote;
+    String movie;
+
     http_request_t _request;
     http_response_t _response;
 
@@ -20,7 +23,16 @@ public:
 
     _httpClient.get(_request, _response, headers);
 
-    return "\"" + findJsonValue(_response.body, "phrase") + "\" - " + findJsonValue(_response.body, "title");
+    quote = findJsonValue(_response.body, "phrase");
+    movie = findJsonValue(_response.body, "title");
+
+    // make sure we're not going to be two long. include two "s, 4 spaces and a dash
+    int overflow = maxLength - (quote.length() + movie.length() + 7);
+    if(overflow < 0) {
+      quote = quote.substring(0, quote.length() + overflow);
+    }
+
+    return "\"" + quote + "\" - " + movie + "  ";
   }
 
 private:
