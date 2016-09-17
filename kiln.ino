@@ -55,7 +55,7 @@ void loop() {
 	int tmp36_2_Result = tmp36_2.update();
 	int rht03Result = rht03.update();
 
-	if(tmp36_1_Result && tmp36_2_Result && rht03Result && voltageDividerResult) {
+	if(tmp36_1_Result && tmp36_2_Result && rht03Result) {
 		Serial.println("RHT03 Humidity: " + String(rht03.humidity(), 2) + " %");
 		Serial.println("RHT03 Temp (F): " + String(rht03.tempF(), 2) + " deg F");
 		Serial.println("RHT03 Temp (C): " + String(rht03.tempC(), 2) + " deg C");
