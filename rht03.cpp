@@ -98,6 +98,11 @@ int RHT03::update()
     {
         _humidity = ((uint16_t) dataBytes[HUMIDITY_H] << 8) | dataBytes[HUMIDITY_L];
         _temperature = ((uint16_t) dataBytes[TEMP_H] << 8) | dataBytes[TEMP_L];
+
+        if(_humidity == 0 && _temperature == 0) {
+          return errorExit(0);
+        }
+
         return 1;
     }
     else
