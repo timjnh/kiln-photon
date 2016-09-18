@@ -92,11 +92,10 @@ void wakeUp() {
 	digitalWrite(POWER_PIN, HIGH);
 
 	WiFi.selectAntenna(ANT_EXTERNAL);
-
 	delay(WAKEUP_DELAY);
 	Serial.println(String::format("Wifi strength: %d", WiFi.RSSI()));
 
-	randomSeed(millis());
+	randomSeed(micros());
 }
 
 void sleep(int seconds) {
